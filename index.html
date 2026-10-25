@@ -252,6 +252,7 @@ function rManage(){$('#main').innerHTML=`<p class="ex">한 줄에 한 단어: <b
  <textarea id="imp" lang="zh" placeholder="图书馆|túshūguǎn|도서관|我在图书馆看书。|图书官/困书馆"></textarea>
  <div class="btns"><label><input type="radio" name="mode" value="add" checked>추가</label><label><input type="radio" name="mode" value="rep">전체 교체</label>
  <button class="btn pri" onclick="doImport()">가져오기</button><button class="btn" onclick="$('#imp').value=V.map(w=>[w.h,w.p,w.m,w.e,(w.x||[]).join('/'),w.g||''].join('|')).join('\\n')">현재 단어 내보내기</button></div>
+ <div class="btns"><button class="btn good" onclick="resetV(false)">삭제한 기본 단어 복구</button><button class="btn bad" onclick="resetV(true)">전체 초기화</button></div>
  <p><b>단어 ${V.length}개</b></p>`+V.map((w,i)=>`<div class="row"><div class="hz han">${esc(w.h)}</div><div class="m"><b>${esc(w.p)}</b><br>${esc(w.m)}</div><button class="x" aria-label="삭제" onclick="delWord(${i})">×</button></div>`).join('')}
 function doImport(){const t=$('#imp').value.trim();if(!t)return;
  const rows=parseRows(t);
@@ -259,7 +260,11 @@ function doImport(){const t=$('#imp').value.trim();if(!t)return;
  if(document.querySelector('input[name=mode]:checked').value==='rep'){if(!confirm('기존 단어와 오답 노트를 모두 지우고 교체할까요?'))return;V=rows;W={}}
  else rows.forEach(r=>{const k=V.findIndex(v=>v.h===r.h);k>=0?V[k]=r:V.push(r)});
  sv(KV,V);sv(KW,W);render()}
-function delWord(i){delete W[V[i].h];V.splice(i,1);sv(KV,V);sv(KW,W);render()}
+function resetV(full){const d=parseRows(SEED);
+ if(full){if(!confirm('모든 단어를 기본 단어로 되돌리고 오답 노트도 비울까요?'))return;V=d;W={}}
+ else{const have=new Set(V.map(w=>w.h));const add=d.filter(w=>!have.has(w.h));V=V.concat(add);alert(add.length?add.length+'개 단어를 복구했어요.':'복구할 기본 단어가 없어요.')}
+ sv(KV,V);sv(KW,W);S.unit='';fcStart();render()}
+function delWord(i){if(!confirm(V[i].h+' 단어를 삭제할까요? (삭제한 기본 단어는 복구할 수 있어요)'))return;delete W[V[i].h];V.splice(i,1);sv(KV,V);sv(KW,W);render()}
 /* 손글씨 연습 */
 function padHTML(){return `<details class="pad" ${S.pad?'open':''} ontoggle="S.pad=this.open;initCanvas()"><summary>손으로 써보기</summary><canvas id="cv" height="220"></canvas><button class="btn" onclick="initCanvas(true)">지우기</button></details>`}
 function initCanvas(clear){const c=$('#cv');if(!c)return;const w=c.clientWidth;if(w&&(c.width!==w||clear))c.width=w;
