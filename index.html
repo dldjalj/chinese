@@ -40,6 +40,8 @@ canvas{touch-action:none;width:100%;height:220px;margin-top:8px;border:1px solid
 background:linear-gradient(var(--line),var(--line)) center/1px 100% no-repeat,linear-gradient(var(--line),var(--line)) center/100% 1px no-repeat,var(--card)}
 label{display:inline-flex;gap:6px;align-items:center}
 .set{display:grid;gap:12px;margin:10px 0}
+.tip{margin-top:8px;padding:8px 12px;border-radius:8px;background:var(--jade2);font-size:15px;text-align:left;font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif}
+.row .tip{margin-top:4px;font-size:13px;padding:5px 8px}
 :focus-visible{outline:3px solid var(--jade);outline-offset:2px}
 </style></head><body>
 <header><h1>한자 암기 도구</h1></header>
@@ -171,12 +173,134 @@ const SEED=`喝|hē|마시다||渴/褐/噶|발음
 忙|máng|바쁘다||盲/亡/忘|2과
 紧张|jǐnzhāng|긴장하다||坚张/紧长/紧弓|2과
 厉害|lìhai|대단하다||历害/厉容/厉宝|2과`;
-const parseRows=t=>t.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{const s=l.includes('\t')?'\t':l.includes('|')?'|':',';const a=l.split(s).map(x=>x.trim());return{h:a[0],p:a[1]||'',m:a[2]||'',e:a[3]||'',x:(a[4]||'').split('/').map(x=>x.trim()).filter(Boolean),g:a[5]||''}}).filter(r=>r.h);
+const parseRows=t=>t.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{const s=l.includes('\t')?'\t':l.includes('|')?'|':',';const a=l.split(s).map(x=>x.trim());return{h:a[0],p:a[1]||'',m:a[2]||'',e:a[3]||'',x:(a[4]||'').split('/').map(x=>x.trim()).filter(Boolean),g:a[5]||'',t:a[6]||''}}).filter(r=>r.h);
+const TIPTXT=`喝=口(입)+曷. 입(口)으로 마시다. 목마를 갈 渴(氵)과 구별: 마시는 건 口!
+茶=풀(艹) 아래 사람(人)이 나무(木)에서 잎을 따는 모습.
+笔=竹(대나무)+毛(털). 대나무 자루에 털(毛)을 단 붓.
+大=사람이 팔다리를 활짝 벌리고 선 모양 → 크다.
+对=又(손)+寸(손). 두 손이 마주 맞는 모습 → 맞다, 마주하다.
+跑=足(발)+包. 발(⻊)로 달리다. 소리는 包(bāo)에서 따왔어요.
+狗=犭(개 견 부수)+句. 犭이 보이면 동물, 그중 '개'.
+飞=새가 날개를 펼치고 나는 모습을 줄인 글자.
+球=王(구슬 옥)+求. 옥구슬처럼 둥근 공.
+吹=口(입)+欠(하품하는 사람). 입을 벌려 바람을 후~ 불다.
+东=木(나무) 사이로 해(日)가 뜨는 東에서 온 글자. 한자음 '동' = dōng.
+南=한자음 '남'과 nán이 거의 같아요. 따뜻한 남쪽.
+西=한자음 '서'와 xī가 닮았어요. 해 질 때 새가 둥지로 돌아오는 쪽.
+北=두 사람이 등을 맞댄 모양. 북쪽은 등지는 방향. 한자음 '북'.
+非常=한국어 '비상(非常)'과 같은 글자. 평소(常)와 다르니(非) '아주, 매우'.
+感谢=한국어 '감사'와 같은 글자. 感(느낄 감)+谢(사례할 사).
+面包=面(밀가루)+包(싸다). 밀가루 반죽으로 싼 것 → 빵.
+果汁=한국어 '과즙'. 果(과일)+汁(즙).
+牛肉面=牛(소)+肉(고기)+面(면). 한국 한자음 그대로 '우육면'.
+汉语=한국어 '한어'. 汉(한나라 한)+语(말 어).
+加油=加(더하다)+油(기름). 차에 기름을 더하듯 '힘내!'.
+一起=一(하나)+起(일어나다). 하나가 되어 함께 일어서다.
+学=위의 점들+冖(지붕)+子(아이). 지붕 아래 아이가 배우는 모습. 한자음 '학'.
+你=亻(사람)+尔. 사람을 가리키는 '너'. 您=你+心(마음)과 비교!
+好=女(여자)+子(아이). 엄마와 아이가 함께 있으니 좋다.
+你好=你(너)+好(좋다) → 너 좋니? 안녕!
+们=亻(사람)+门(문). 사람(亻)들이 문 앞에 모인 모습 → ~들. 门/闷과 구별: 亻이 있으면 们.
+你们=你(너)+们(~들) → 너희들.
+再见=再(다시)+见(보다) → 다시 보자.
+明天=明(밝을 명: 日+月)+天(하늘). 밝은 하늘이 다시 오는 날 → 내일.
+见=見(볼 견)을 줄인 글자. 한자음 '견'. 눈이 사람 위에 있는 모양에서 왔어요.
+明天见=明天(내일)+见(보다) → 내일 보자.
+大家=大(크다)+家(집). 큰 집 식구들 → 여러분.
+老师=한국 한자음 '노사'. 老(늙을 로)+师(스승 사) → 선생님.
+早上=早(이를 조: 해(日) 위로 싹(十)이 올라오는 모습)+上. 이른 아침.
+晚上=晚(저물 만)+上. 한자음 '만'. 해(日)가 저무는 저녁.
+吗=口(입)+马. 입(口)으로 묻는 말. 妈(女)와 구별: 묻는 건 口, 엄마는 女.
+谢谢=讠(말씀 언)+射. 말(讠)로 마음을 쏘아(射) 전하는 고마움. 射와 구별: 讠이 있으면 谢.
+不=한자음 '불'과 bù가 닮았어요. 불가능, 불행의 '불' = 아니다.
+客气=客(손님 객)+气(기운). 손님처럼 예의를 차리다.
+不客气=손님 대접(客气) 안 해도 돼요 → 천만에요.
+对不起=对(대하다)+不+起(일어나다). 마주 볼 낯이 서지(起) 않는다 → 미안하다.
+没关系=没(없다)+关系(관계). 관계(关系)없다 → 괜찮아.
+不好意思=不+好+意思. '좋은 뜻이 아닌' 상황이라 쑥스럽고 미안하다.
+没事儿=没(없다)+事(일). 일이 없다 → 괜찮다.
+谢=讠(말씀 언)+射. 말(讠)로 하는 감사. 한자음 '사'.
+不谢=不(아니다)+谢(감사). 감사할 것 없어요.
+您=你+心(마음). 마음(心)을 담아 높이는 '당신'.
+同学=한국어 '동학'. 同(같을 동)+学 → 같이 배우는 사람.
+妈妈=女(여자)+马. 마(马) 소리를 따온 글자, 엄마 '마'.
+我=창(戈)이 들어 있어요. 창(戈)을 들고 지키는 '나'. 饿(배고프다)도 我가 들어가요.
+我们=我(나)+们(~들) → 우리.
+他=亻(사람)+也. 사람(亻)을 가리키는 '그'.
+她=女(여자)+也. 여자(女) 변이 있으면 '그녀'.
+他们=他+们. 그들 (남자 또는 섞인 무리).
+她们=她+们. 여자들로만 이뤄진 그녀들.
+很好=很(매우)+好(좋다) → 잘 지내요.
+不好=不(아니다)+好(좋다) → 잘못 지내요.
+还好=还(아직)+好(좋다) → 아직 괜찮은 정도, 그럭저럭.
+早安=早(아침)+安(편안). 安=宀(집)+女. 집 안에 여자가 있어 편안.
+晚安=晚(저녁)+安(편안). 저녁에 편안히 → 잘 자.
+先生=한국어 '선생'과 같은 글자. 先(먼저)+生(태어나다) → 먼저 난 사람.
+帅=한자음 '수'(帥)와 shuài가 닮았어요. 원래 '장수' → 멋진 장수처럼 잘생겼다. 师(shī, 사)와 구별!
+去=연상: 땅(土)을 딛고 자리(厶)를 떠나 가다.
+不用谢=不用(~할 필요 없다)+谢(감사) → 감사할 필요 없어요.
+没什么=没(없다)+什么(무엇) → 별거 없어요.
+法国=한국 한자음 '법국'(法國). 法의 중국어 발음 fǎ에 国을 붙이면 프랑스.
+那=口 없이 那이면 '저(that)'. 哪(어느)=口를 붙인 那. 입(口)으로 묻는 건 哪.
+都=者+阝(고을). 한 고을 사람들이 모두 → 모두. 한자음 '도'.
+看=手(손)+目(눈). 손을 눈 위에 얹고 멀리 바라보는 모습 → 보다.
+吃=口(입)+乞. 입(口)으로 먹다. 소리는 乞(qǐ)와 닮았어요.
+高=높은 누각이 우뚝 선 모양 → 높다. 한자음 '고'.
+懂=忄(마음)+董. 마음(忄)으로 이해하다.
+桌子=桌(탁자 탁)=卓(높을 탁)+木(나무). 나무로 만든 높은 탁자.
+包=勹(감싸다)+己. 아이(己)를 감싸 안은 모양 → 싸다, 가방. 한자음 '포'.
+饱=饣(먹을 식)+包. 먹고(饣) 속을 감싸(包) 채우니 배부르다.
+谁=讠(말씀 언)+隹(새 추). 말(讠)로 '누구냐'고 묻다.
+生气=生(나다)+气(기운). 화(气)가 솟아나다(生) → 화나다.
+吓=口(입)+下. 입(口)을 벌리고 놀라다. 下(xià, 아래)와 구별: 口가 있으면 놀라다.
+开心=开(열다)+心(마음). 마음을 열다 → 즐겁다.
+伤心=伤(상처 상)+心(마음). 마음(心)에 상처(伤).
+本子=本(근본 본: 나무 뿌리를 가리킨 글자)+子. 책·노트 → 한자음 '본'.
+生日=生(태어나다)+日(날) → 태어난 날.
+语=讠(말씀 언)+吾(나 오). 내(吾) 말(讠) → 말, 언어. 한자음 '어'.
+是=日(해)+正(바르다)에서 온 글자. 해처럼 바르다 → ~이다. 한자음 '시'.
+不是=不(아니다)+是(이다) → ~이(가) 아니다.
+哪=口(입)+那. 입(口)으로 묻는 '어느'. 那(저)와 구별: 口가 있으면 의문.
+国=囗(울타리)+玉(구슬 옥). 울타리 안의 보배 → 나라. 한자음 '국'.
+人=사람이 서 있는 옆모습. 한자음 '인'.
+韩国=한국어 '한국'과 같은 글자. 韩(한)+国(나라).
+韩国人=韩国(한국)+人(사람) → 한국인.
+也=연상: 他·她·地 속에 공통으로 들어가는 글자. '~도 또한'.
+中国=中(가운데)+国(나라). 세상의 가운데 나라.
+中国人=中国(중국)+人(사람) → 중국인.
+美国=한국어 '미국'과 같은 글자. 美(아름다울 미)+国.
+学生=한국어 '학생'과 같은 글자. 学(배우다)+生(사람).
+意大利=소리를 따온 음역어. 한자음으로 '의대리' → Yìdàlì.
+墨西哥=소리를 따온 음역어. 한자음으로 '묵서가' → Mòxīgē.
+加拿大='가나다' 소리 그대로! 加(가)+拿(나)+大(다) → Jiānádà.
+叫=口(입)+丩. 입(口)으로 부르다.
+认识=认(讠+人)=말(讠)로 사람(人)을 알아가다. 识=한자음 '식', '인식'의 그 글자.
+什么=什(무엇 십)+么. 소리가 shénme. 什은 亻+十.
+名字=名(이름 명: 夕(저녁)+口(입))+字(글자). 어두운 저녁(夕)에 입(口)으로 이름을 불러 알렸어요.
+很=彳(걷다)+艮. 길을 걸으니 아주 멀다 → 아주, 매우. 狠(犭 개)·恨(忄 마음)과 구별: 很은 彳!
+高兴=高(높다)+兴(일어나다). 기분이 높이 흥(兴)이 오르다 → 기쁘다.
+呢=口(입)+尼. 입(口)으로 되묻는 말 → ~는요?
+这=辶(걷다)+文. 가까이 걸어와 가리키는 '이것'.
+手机=手(손)+机(기계 기). 손에 드는 기계 → 휴대 전화.
+书=한자음 '서'(書). 붓으로 쓴 글 → 책.
+杯子=杯(잔 배)=木(나무)+不. 나무로 만든 잔 → 컵.
+饿=饣(먹을 식)+我(나). 먹을 것(饣)이 '나(我)'에게 없어서 배고프다.
+累=田(밭)+糸(실). 피로가 실(糸)처럼 쌓이다. 果(木 아래)와 구별: 아래가 糸면 累.
+幸福=한국어 '행복'과 같은 글자. 幸(다행 행)+福(복 복).
+日本=日(해)+本(근본). 해가 뜨는 근본 → 해 뜨는 나라.
+英国=한국어 '영국'과 같은 글자. 英(꽃부리 영)+国.
+西班牙=소리를 따온 음역어. 한자음으로 '서반아' → 스페인.
+忙=忄(마음)+亡(망하다). 마음(忄)이 망할(亡) 정도로 바쁘다. 忘(잊다)과 구별: 忙은 忄.
+紧张=한국어 '긴장'과 같은 글자. 紧(팽팽할 긴)+张(벌릴 장).
+厉害=厉(엄할 려)+害(해칠 해). 해를 끼칠 만큼 엄청난 실력 → 대단하다.`;
+const TIPS=Object.fromEntries(TIPTXT.split('\n').map(l=>{const i=l.indexOf('=');return[l.slice(0,i),l.slice(i+1)]}));
 const ld=(k,d)=>{try{const s=localStorage.getItem(k);return s?JSON.parse(s):d}catch(e){return d}};
 const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let V=ld(KV,null)||parseRows(SEED),W=ld(KW,{}),tab='card';
 const S={fc:{order:[],i:0,flip:false,front:'both',wrongOnly:false},q:{type:'input',ask:'meaning',wrongOnly:false,phase:'setup',pool:[],i:0,ok:0,ans:null,opts:[]},pad:false,unit:''};
 const $=s=>document.querySelector(s);
+const tip=w=>w.t||TIPS[w.h]||'';
+const tipHTML=w=>tip(w)?`<div class="tip">💡 ${esc(tip(w))}</div>`:'';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 const pool=wo=>V.filter(w=>(!wo||W[w.h])&&(!S.unit||w.g===S.unit));
@@ -193,7 +317,7 @@ function render(){
 /* 플래시카드 */
 function fcStart(wo){const f=S.fc;if(wo!==undefined)f.wrongOnly=wo;f.order=shuf(pool(f.wrongOnly));f.i=0;f.flip=false}
 function cardInner(w){const f=S.fc;
- if(f.flip)return `<div class="hz han">${esc(w.h)}</div><div class="py">${esc(w.p)}</div><div class="ex han">${esc(w.e)}</div>`;
+ if(f.flip)return `<div class="hz han">${esc(w.h)}</div><div class="py">${esc(w.p)}</div><div class="ex han">${esc(w.e)}</div>${tipHTML(w)}`;
  return (f.front!=='pinyin'?`<div class="mean">${esc(w.m)}</div>`:'')+(f.front!=='meaning'?`<div class="py">${esc(w.p)}</div>`:'')+`<div class="ex">탭해서 한자 확인</div>`}
 function rCard(){const f=S.fc,w=f.order[f.i];
  let h=`<div class="bar"><label>범위 <select onchange="S.unit=this.value;fcStart();render()">${unitOpts()}</select></label><label>앞면 <select onchange="S.fc.front=this.value;S.fc.flip=false;render()">${opt('both',f.front,'뜻+병음')}${opt('meaning',f.front,'뜻만')}${opt('pinyin',f.front,'병음만')}</select></label>
@@ -226,7 +350,7 @@ function rQuiz(){const q=S.q;
   ${a?'':'<button class="btn pri" onclick="qCheck()">확인</button>'}`;
  if(a){const diff=!a.ok&&q.type==='input'?[...a.val].map((c,i)=>c===w.h[i]?c:`<span class="bd">${esc(c)}</span>`).join(''):'';
   h+=`<div class="fb ${a.ok?'ok':'no'}"><b>${a.ok?'정답!':'오답'}</b>${diff?`<div class="hz han">${diff}</div><div class="ex">내가 쓴 답 (빨간 글자가 틀린 부분)</div>`:''}
-  <div class="hz han">${esc(w.h)}</div><div class="py">${esc(w.p)}</div><div class="ex han">${esc(w.e)}</div></div>
+  <div class="hz han">${esc(w.h)}</div><div class="py">${esc(w.p)}</div><div class="ex han">${esc(w.e)}</div>${tipHTML(w)}</div>
   <button class="btn pri" id="nx" onclick="qNext()">${q.i+1<q.pool.length?'다음 문제':'결과 보기'}</button>`}
  else if(q.type==='input')h+=padHTML();
  $('#main').innerHTML=h;const el=$('#ans');if(el&&!a)el.focus();const nx=$('#nx');if(nx)nx.focus()}
@@ -246,12 +370,12 @@ function qNext(){const q=S.q;if(q.i+1>=q.pool.length)q.phase='end';else{q.i++;qP
 function rWrong(){const l=V.filter(w=>W[w.h]).sort((a,b)=>W[b.h]-W[a.h]);
  if(!l.length){$('#main').innerHTML='<div class="empty">오답 노트가 비어 있어요. 틀린 한자는 자동으로 여기에 모여요.</div>';return}
  $('#main').innerHTML=`<div class="btns"><button class="btn pri" onclick="S.q.wrongOnly=true;S.q.phase='setup';go('quiz')">오답으로 퀴즈</button><button class="btn" onclick="fcStart(true);go('card')">오답 플래시카드</button><button class="btn bad" onclick="if(confirm('오답 노트를 모두 비울까요?')){W={};sv(KW,W);render()}">모두 비우기</button></div>`+
- l.map(w=>`<div class="row"><div class="hz han">${esc(w.h)}</div><div class="m"><b>${esc(w.p)}</b><br>${esc(w.m)}</div><span class="ex">${W[w.h]}회</span><button class="x" aria-label="삭제" onclick="delete W['${w.h.replace(/'/g,"\\'")}'];sv(KW,W);render()">×</button></div>`).join('')}
+ l.map(w=>`<div class="row"><div class="hz han">${esc(w.h)}</div><div class="m"><b>${esc(w.p)}</b><br>${esc(w.m)}${tipHTML(w)}</div><span class="ex">${W[w.h]}회</span><button class="x" aria-label="삭제" onclick="delete W['${w.h.replace(/'/g,"\\'")}'];sv(KW,W);render()">×</button></div>`).join('')}
 /* 단어 관리 */
-function rManage(){$('#main').innerHTML=`<p class="ex">한 줄에 한 단어: <b>한자|병음|뜻|예문|헷갈리는한자(/로 구분)|범위(선택)</b><br>탭이나 쉼표로 구분해도 돼요. 헷갈리는 한자를 적으면 객관식 보기로 나와요.</p>
+function rManage(){$('#main').innerHTML=`<p class="ex">한 줄에 한 단어: <b>한자|병음|뜻|예문|헷갈리는한자(/로 구분)|범위|팁(선택)</b><br>탭이나 쉼표로 구분해도 돼요. 헷갈리는 한자를 적으면 객관식 보기로 나와요.</p>
  <textarea id="imp" lang="zh" placeholder="图书馆|túshūguǎn|도서관|我在图书馆看书。|图书官/困书馆"></textarea>
  <div class="btns"><label><input type="radio" name="mode" value="add" checked>추가</label><label><input type="radio" name="mode" value="rep">전체 교체</label>
- <button class="btn pri" onclick="doImport()">가져오기</button><button class="btn" onclick="$('#imp').value=V.map(w=>[w.h,w.p,w.m,w.e,(w.x||[]).join('/'),w.g||''].join('|')).join('\\n')">현재 단어 내보내기</button></div>
+ <button class="btn pri" onclick="doImport()">가져오기</button><button class="btn" onclick="$('#imp').value=V.map(w=>[w.h,w.p,w.m,w.e,(w.x||[]).join('/'),w.g||'',w.t||''].join('|')).join('\\n')">현재 단어 내보내기</button></div>
  <div class="btns"><button class="btn good" onclick="resetV(false)">삭제한 기본 단어 복구</button><button class="btn bad" onclick="resetV(true)">전체 초기화</button></div>
  <p><b>단어 ${V.length}개</b></p>`+V.map((w,i)=>`<div class="row"><div class="hz han">${esc(w.h)}</div><div class="m"><b>${esc(w.p)}</b><br>${esc(w.m)}</div><button class="x" aria-label="삭제" onclick="delWord(${i})">×</button></div>`).join('')}
 function doImport(){const t=$('#imp').value.trim();if(!t)return;
